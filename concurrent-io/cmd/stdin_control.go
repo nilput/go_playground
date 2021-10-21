@@ -1,11 +1,11 @@
-package stdin_control
+package cmd
 
 import (
 	"bufio"
+	"concurrent_io/http"
 	"fmt"
 	"os"
 	"strings"
-	"concurrent-io/http_serve"
 )
 
 func inputCommandError(errMsg string) {
@@ -13,7 +13,15 @@ func inputCommandError(errMsg string) {
 }
 
 func updateHttpContent(content string) {
-	http_serve.
+	http.Content = content
+}
+
+func usageHelp() {
+	fmt.Println("")
+	fmt.Println("Usage:")
+	fmt.Println("\tHELP:\tShow this help guide.")
+	fmt.Println("\tSET:\tUpdate HTTP response content.")
+	fmt.Println("\tEXIT:\tQuit.")
 }
 
 func proccessLine(line string) (quit bool) {
@@ -29,21 +37,30 @@ func proccessLine(line string) (quit bool) {
 			inputCommandError("set command takes 2+ arguments")
 			return false
 		}
-		content := strings.Join(part[1:])
+		content := strings.Join(parts[1:], " ")
 		updateHttpContent(content)
-	}
-	else if first == "quit" || first == "exit" {
+	} else if first == "help" || first == "?" {
+		usageHelp()
+	} else if first == "quit" || first == "exit" {
 		return true
 	}
+	return false
 }
 
-func stdinControl(ch chan bool) {
+func prompt() {
+	fmt.Print("$ ")
+}
+
+func StdinControl(ch chan bool) {
 	for {
 		scanner := bufio.NewScanner(os.Stdin)
+		prompt()
 		scanner.Scan()
 		line := scanner.Text()
-		proccessLine(line)
-		s := fmt.Scan()
+		quit := proccessLine(line)
+		if quit {
+			break
+		}
 	}
 	ch <- true
 }
